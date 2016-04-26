@@ -44,6 +44,8 @@ int main(int argc, char** argv)
   int in_index;
   int out_index;
 
+  bool RESULT_UNSUCESSFULL;
+
   num_input_args = 1;
   num_output_args = 1;
   
@@ -78,18 +80,17 @@ int main(int argc, char** argv)
     //-----------------------------------------------
 #ifdef GPP_ONLY_FLOW  
     startTime = getCPUTime();
-    //for (num_itn = 0 ; num_itn < MAX_ITERATION; num_itn++) {
+    for (cu = 0; cu < NUMBER_OF_COMPUTE_UNITS; cu++) {
         sdx_cppKernel_top(a_in_ptr, a_out_ptr);
-        //a_in_ptr+= LOCAL_DATA_SIZE;
-        //a_out_ptr+= LOCAL_DATA_SIZE;
-
-    //} // MAX_ITERATION
+        a_in_ptr += LOCAL_DATA_SIZE;
+        a_out_ptr += LOCAL_DATA_SIZE;
+    }
     endTime = getCPUTime();
 
      a_in_ptr = a_in_head;
      a_out_ptr = a_out_ptr_head;
 #else 
-    fpga_hw_accel<data_t,data_t, NUMBER_OF_COMPUTE_UNITS, LOCAL_DATA_SIZE, GLOBAL_DATA_SIZE> Alpha_Data_ku060_card;
+    fpga_hw_accel<data_t,data_t, NUMBER_OF_COMPUTE_UNITS, LOCAL_DATA_SIZE> Alpha_Data_ku060_card;
 
     if (argc != 2){
     printf("%s <inputfile>\n", argv[0]);
@@ -116,14 +117,11 @@ int main(int argc, char** argv)
         a_out_ptr = a_out_ptr_head;
         
         run_success = 0;
-        //for (num_itn = 0 ; num_itn < MAX_ITERATION; num_itn++) {
-            //printf("DBG__SRAI(top) calling run_fpga_accel - %d\n",num_itn);
-            //printf (" ** Starting  Algorithm on FPGA Platform - Iteration : %d\n", num_itn);
+        for (int itn = 0; itn < MAX_ITERATION; itn++) {
             run_success |=  Alpha_Data_ku060_card.run_fpga_accel (a_in_ptr, a_out_ptr);
-            //a_in_ptr += (NUMBER_OF_COMPUTE_UNITS*LOCAL_DATA_SIZE);
-            //a_out_ptr+= (NUMBER_OF_COMPUTE_UNITS*LOCAL_DATA_SIZE);
-            //printf (" ***********************  End of - Iteration : %d\n", num_itn);
-        //}
+            a_in_ptr += LOCAL_DATA_SIZE*NUMBER_OF_COMPUTE_UNITS;
+            a_out_ptr += LOCAL_DATA_SIZE*NUMBER_OF_COMPUTE_UNITS;
+        }
 
         a_in_ptr = a_in_head;
         a_out_ptr = a_out_ptr_head;
@@ -144,40 +142,61 @@ int main(int argc, char** argv)
 #endif
     //int NUMBER_OF_COMPUTE_UNITS_to_print = NUMBER_OF_COMPUTE_UNITS;
     //int LOCAL_DATA_SIZE_to_print = LOCAL_DATA_SIZE;
-    //int MAX_ITERATION_to_print = MAX_ITERATION;;
 
     int NUMBER_OF_COMPUTE_UNITS_to_print = 1;
     int LOCAL_DATA_SIZE_to_print = 8;
     int MAX_ITERATION_to_print = 1;
 
-        //a_in_ptr = a_in_head + LOCAL_DATA_SIZE*(MAX_ITERATION - MAX_ITERATION_to_print);
-        //a_out_ptr = a_out_ptr_head + LOCAL_DATA_SIZE*(MAX_ITERATION - MAX_ITERATION_to_print);
-    a_in_ptr = a_in_head ;
-    a_out_ptr = a_out_ptr_head ;
 
-      printf (" ------------   Results  ---------------------------------------------------------------------------\n");
-      printf (" Global_data_size: %d(%d MB) :: Local_data_size : %d (%d MB):: Number_of_CU = %d :: Num_iternation = %d\n", GLOBAL_DATA_SIZE, (int)GLOBAL_DATA_SIZE_IN_MB, LOCAL_DATA_SIZE, (int)LOCAL_DATA_SIZE_IN_MB, NUMBER_OF_COMPUTE_UNITS, MAX_ITERATION); 
-      printf (" ---------------------------------------------------------------------------------------------------\n");
-      printf (" ---------------------------------------------------------------------------------------------------\n");
-    ElapsedTime = (endTime - startTime);
-    for (num_itn = 0; num_itn <  MAX_ITERATION_to_print;num_itn++) { 
-      printf("\n Input Test Data Set : %d:\n", num_itn);
-      for (cu =0;cu<NUMBER_OF_COMPUTE_UNITS_to_print;cu++) {
-          for (i=0;i<LOCAL_DATA_SIZE_to_print;i++) {
-               printf ("\t%d ",(int)*a_in_ptr);
-               a_in_ptr++;
-           }
-           printf ("\n");
-      }
-    printf("\n**** Result Data Set : ****\n");
-      for (cu =0;cu<NUMBER_OF_COMPUTE_UNITS_to_print;cu++) {
-        for (i=0;i<LOCAL_DATA_SIZE_to_print;i++) {
-            printf ("\t%d ",(int)*a_out_ptr);
+    RESULT_UNSUCESSFULL = 0;
+    double  err_f;
+    for (num_itn = 0 ; num_itn < GLOBAL_DATA_SIZE; num_itn++) {
+        err_f = fabs(*a_in_ptr - *a_out_ptr);
+        if (err_f < 0.0000001) {
+            a_in_ptr++;
             a_out_ptr++;
+            RESULT_UNSUCESSFULL |= 0;
+        } else {
+            RESULT_UNSUCESSFULL |= 1;
         }
-       printf ("\n");
-      }
-        printf ("-----------------------------------------------------\n");
+        if (RESULT_UNSUCESSFULL) {
+            printf("Result verification faild expected %f got %f at %d\n", *a_in_ptr, *a_out_ptr, num_itn);
+        }
+    }
+
+   a_in_ptr = a_in_head;
+   a_out_ptr = a_out_ptr_head;
+
+    a_in_ptr = a_in_head + (GLOBAL_DATA_SIZE - LOCAL_DATA_SIZE_to_print) ;
+    a_out_ptr = a_out_ptr_head + (GLOBAL_DATA_SIZE - LOCAL_DATA_SIZE_to_print) ;
+    if (RESULT_UNSUCESSFULL) {
+        printf (" ------------   Results did not Verify - Test Failed !!!!!! -------------------------------------------------\n");
+    } else {
+        printf (" ------------   Results Verified  ---------------------------------------------------------------------------\n");
+        printf (" ------------   Results  ---------------------------------------------------------------------------\n");
+        printf (" Global_data_size: %d(%d MB) :: Local_data_size : %d (%d MB):: Number_of_CU = %d \n", GLOBAL_DATA_SIZE, (int)GLOBAL_DATA_SIZE_IN_MB, LOCAL_DATA_SIZE, (int)LOCAL_DATA_SIZE_IN_MB, NUMBER_OF_COMPUTE_UNITS); 
+        printf (" ---------------------------------------------------------------------------------------------------\n");
+        printf (" ---------------------------------------------------------------------------------------------------\n");
+        ElapsedTime = (endTime - startTime);
+        for (num_itn = 0; num_itn <  MAX_ITERATION_to_print;num_itn++) { 
+            printf("\n Input Test Data Set : %d:\n", num_itn);
+            for (cu =0;cu<NUMBER_OF_COMPUTE_UNITS_to_print;cu++) {
+                for (i=0;i<LOCAL_DATA_SIZE_to_print;i++) {
+                    printf ("\t%d ",(int)*a_in_ptr);
+                    a_in_ptr++;
+                }
+                printf ("\n");
+            }
+            printf("\n**** Result Data Set : ****\n");
+            for (cu =0;cu<NUMBER_OF_COMPUTE_UNITS_to_print;cu++) {
+                for (i=0;i<LOCAL_DATA_SIZE_to_print;i++) {
+                    printf ("\t%d ",(int)*a_out_ptr);
+                    a_out_ptr++;
+                }
+                printf ("\n");
+            }
+            printf ("-----------------------------------------------------\n");
+        }
     }
     delete [] a_in_head;
     delete [] a_out_ptr_head;

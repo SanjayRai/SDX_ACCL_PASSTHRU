@@ -8,7 +8,7 @@ OPENCL_INC := $(XILINX_OPENCL)/runtime/include/1_2
 OPENCL_LIB := $(XILINX_OPENCL)/runtime/lib/x86_64
 
 
-NUMBER_OF_CU := 1
+NUMBER_OF_CU := 2
 
 SRCS_HOST  :=  ../src/tb_sdx_cppKernel_top.cpp ../src/getCPUTime.cpp 
 SRCS_XOCC  :=   ../src/sdx_cppKernel_top.cpp ../src/simple_kernel.cpp

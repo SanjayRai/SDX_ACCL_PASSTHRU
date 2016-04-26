@@ -5,7 +5,7 @@
 #include <CL/opencl.h>
 #include <stdio.h>
 
-template <class input_data_type, class output_data_type, int NUM_OF_COMPUTE_UNITS, int LOCAL_DATA_SIZE, int GLOBAL_DATA_SIZE>
+template <class input_data_type, class output_data_type, int NUM_OF_COMPUTE_UNITS, int LOCAL_DATA_SIZE>
 class fpga_hw_accel {
 
 
@@ -76,11 +76,11 @@ class fpga_hw_accel {
         num_output_args = num_out_args;
 
         for (i = 0 ; i < num_input_args; i++ ) {
-            in_args_size_vec[i] = in_args_size[i]*GLOBAL_DATA_SIZE;
+            in_args_size_vec[i] = in_args_size[i]*LOCAL_DATA_SIZE;
         }
 
         for (i = 0 ; i < num_output_args; i++ ) {
-            out_args_size_vec[i] = out_args_size[i]*GLOBAL_DATA_SIZE;
+            out_args_size_vec[i] = out_args_size[i]*LOCAL_DATA_SIZE;
         }
 
         SUCESSFUL_EXIT_CODE = 1;
@@ -221,8 +221,8 @@ class fpga_hw_accel {
             for (i = 0 ; i < num_input_args; i++ ) {
                 //printf ("__SRAI DBG (SDACCEL_UTILS) kernel clEnqueueWriteBuffer : %d\n", compute_unit);
                 err_k[compute_unit] = clEnqueueWriteBuffer(commands, inputs[compute_unit][i], CL_TRUE, 0, in_args_size_vec[i], in_args, 0, NULL, NULL);
-                //in_args+=LOCAL_DATA_SIZE;
             }
+            in_args += LOCAL_DATA_SIZE;
         }
 
 
@@ -266,8 +266,8 @@ class fpga_hw_accel {
                     for (i = 0 ; i < num_output_args; i++ ) {
                         //printf ("__SRAI DBG (SDACCEL_UTILS) kernel clEnqueueReadBuffer : %d\n", compute_unit);
                         err_k[compute_unit] = clEnqueueReadBuffer( commands, outputs[compute_unit][i], CL_TRUE, 0, out_args_size_vec[i], results_out, 0, NULL, NULL);
-                        //results_out+=LOCAL_DATA_SIZE;
                     }
+                results_out += LOCAL_DATA_SIZE;
                 }
                 for(compute_unit = 0; compute_unit < NUM_OF_COMPUTE_UNITS; compute_unit++) {
                     if (err_k[compute_unit] != CL_SUCCESS) {

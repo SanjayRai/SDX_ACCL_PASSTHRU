@@ -6,17 +6,16 @@
 #define NUMBER_OF_COMPUTE_UNITS 1 
 #endif
 
-//#define data_t double
-#define data_t ap_uint<512>
+#define data_t double
+//#define data_t ap_uint<512>
 
-#define LOCAL_DATA_SIZE 1024*1024*16
+#define MAX_ITERATION 1 
+//#define LOCAL_DATA_SIZE 1024*1024*16
+#define LOCAL_DATA_SIZE 1024*1024*8
 #define LOCAL_DATA_SIZE_IN_MB (LOCAL_DATA_SIZE*sizeof(data_t))/(1024*1024)
-//#define LOCAL_DATA_SIZE 8*8
-//#define GLOBAL_DATA_SIZE LOCAL_DATA_SIZE*4
-#define GLOBAL_DATA_SIZE LOCAL_DATA_SIZE*1
+#define GLOBAL_DATA_SIZE LOCAL_DATA_SIZE*NUMBER_OF_COMPUTE_UNITS*MAX_ITERATION
 #define GLOBAL_DATA_SIZE_IN_MB (GLOBAL_DATA_SIZE*sizeof(data_t))/(1024*1024)
 
-#define MAX_ITERATION GLOBAL_DATA_SIZE/(NUMBER_OF_COMPUTE_UNITS* LOCAL_DATA_SIZE) 
 
 void simple_kernel (data_t *a_in, data_t *results);
 
