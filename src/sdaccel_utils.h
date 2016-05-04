@@ -76,11 +76,11 @@ class fpga_hw_accel {
         num_output_args = num_out_args;
 
         for (i = 0 ; i < num_input_args; i++ ) {
-            in_args_size_vec[i] = in_args_size[i]*LOCAL_DATA_SIZE;
+            in_args_size_vec[i] = in_args_size[i];
         }
 
         for (i = 0 ; i < num_output_args; i++ ) {
-            out_args_size_vec[i] = out_args_size[i]*LOCAL_DATA_SIZE;
+            out_args_size_vec[i] = out_args_size[i];
         }
 
         SUCESSFUL_EXIT_CODE = 1;

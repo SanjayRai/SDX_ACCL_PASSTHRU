@@ -2,27 +2,31 @@
 #ifndef SDX_CPPKERNEL_TOP_H_
 #define SDX_CPPKERNEL_TOP_H_ 
 
-#ifndef NUMBER_OF_COMPUTE_UNITS
-#define NUMBER_OF_COMPUTE_UNITS 1 
-#endif
+//#define data_t double 
+#define data_t ap_uint<512>
 
-#define data_t double
-//#define data_t ap_uint<512>
+#define SDX_BUS_WIDTH 512
+#define SDX_BUS_WIDTH_BYTES SDX_BUS_WIDTH/8
+#define SDX_CU_LOCAL_SIZE 64 
+
+#define sdx_data_t ap_uint<SDX_BUS_WIDTH>
 
 #define MAX_ITERATION 1 
-//#define LOCAL_DATA_SIZE 1024*1024*16
-#define LOCAL_DATA_SIZE 1024*1024*8
+//#define LOCAL_DATA_SIZE SDX_CU_LOCAL_SIZE*32
+#define LOCAL_DATA_SIZE SDX_CU_LOCAL_SIZE*1024*256
 #define LOCAL_DATA_SIZE_IN_MB (LOCAL_DATA_SIZE*sizeof(data_t))/(1024*1024)
-#define GLOBAL_DATA_SIZE LOCAL_DATA_SIZE*NUMBER_OF_COMPUTE_UNITS*MAX_ITERATION
+#define GLOBAL_DATA_SIZE LOCAL_DATA_SIZE*MAX_ITERATION
 #define GLOBAL_DATA_SIZE_IN_MB (GLOBAL_DATA_SIZE*sizeof(data_t))/(1024*1024)
 
+
+const long int HLS_AXI_SIM_DEPTH=(long int)LOCAL_DATA_SIZE;
 
 void simple_kernel (data_t *a_in, data_t *results);
 
 #ifdef XOCC_CPP_KERNEL 
 extern "C" {
 #endif
-void sdx_cppKernel_top(data_t a_in[GLOBAL_DATA_SIZE], data_t y_out[GLOBAL_DATA_SIZE]);
+void sdx_cppKernel_top(data_t *a_in, data_t *y_out);
 #ifdef XOCC_CPP_KERNEL 
 }
 #endif
