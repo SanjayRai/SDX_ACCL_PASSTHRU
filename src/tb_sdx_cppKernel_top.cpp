@@ -130,15 +130,15 @@ int main(int argc, char** argv)
     RESULT_UNSUCESSFULL = 0;
     for (num_itn = 0 ; num_itn < GLOBAL_DATA_SIZE; num_itn++) {
         if (*a_in_ptr == *a_out_ptr){
-            a_in_ptr++;
-            a_out_ptr++;
             RESULT_UNSUCESSFULL |= 0;
         } else {
             RESULT_UNSUCESSFULL |= 1;
         }
         if (RESULT_UNSUCESSFULL) {
-            printf("Result verification faild expected %f got %f at %d\n", (double)*a_in_ptr, (double)*a_out_ptr, num_itn);
+            //printf("Result verification faild expected %f got %f at %d\n", (double)*a_in_ptr, (double)*a_out_ptr, num_itn);
         }
+        a_in_ptr++;
+        a_out_ptr++;
     }
 
    a_in_ptr = a_in_head;
