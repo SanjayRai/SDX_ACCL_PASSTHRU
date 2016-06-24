@@ -23,7 +23,7 @@ void sdx_cppKernel_top(sdx_data_t a_in[LOCAL_DATA_SIZE], sdx_data_t y_out[LOCAL_
         for (int itn_num = 0 ; itn_num < SDX_CU_LOCAL_SIZE; itn_num++) {
             simple_kernel (&bufa_val[itn_num], &bufy_val[itn_num]);
         }
-        memcpy(y_out, bufa_val, SDX_BUS_WIDTH_BYTES*SDX_CU_LOCAL_SIZE);
+        memcpy(y_out, bufy_val, SDX_BUS_WIDTH_BYTES*SDX_CU_LOCAL_SIZE);
         y_out += SDX_CU_LOCAL_SIZE;
     }
     return;
